@@ -1,41 +1,29 @@
 import React from "react";
-import { generateCertificate } from "../services/api";
+import { useLocation } from "react-router-dom";
+import { submitAnswers } from "../services/api";
 
-const Certificate = () => {
+function Certificate() {
+  const location = useLocation();
+  const { score } = location.state || {};
+  const username = localStorage.getItem("username");
+
   const handleDownload = async () => {
-    try {
-      const result = JSON.parse(localStorage.getItem("lastResult"));
-      if (!result) {
-        alert("No result found!");
-        return;
-      }
-
-      const res = await generateCertificate(result.userId);
-
-      // Create a Blob from the PDF response
-      const blob = new Blob([res.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-
-      // Create a temporary link to download
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Certificate_${result.username}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to generate certificate.");
-    }
+    const response = await submitAnswers({ username, quizTitle: "Default Quiz", score });
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${username}-certificate.pdf`;
+    link.click();
   };
 
   return (
     <div>
       <h2>Certificate</h2>
-      <button onClick={handleDownload}>Download PDF Certificate</button>
+      <p>Score: {score}</p>
+      <button onClick={handleDownload}>Download PDF</button>
     </div>
   );
-};
+}
 
 export default Certificate;

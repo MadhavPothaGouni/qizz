@@ -1,21 +1,25 @@
 import React from "react";
 
-const QuestionCard = ({ question, selectedAnswer, onSelect }) => {
+const QuestionCard = ({ question, selected, onSelect }) => {
   return (
-    <div>
+    <div style={{ border: "1px solid #ccc", padding: "15px", borderRadius: "5px" }}>
       <h3>{question.questionText}</h3>
-      {question.options.map((opt, idx) => (
-        <div key={idx}>
-          <input
-            type="radio"
-            name={question._id}
-            value={opt}
-            checked={selectedAnswer === opt}
-            onChange={() => onSelect(question._id, opt)}
-          />
-          <label>{opt}</label>
-        </div>
-      ))}
+      <div>
+        {question.options.map((option, idx) => (
+          <div key={idx} style={{ margin: "5px 0" }}>
+            <label>
+              <input
+                type="radio"
+                name={question._id}
+                value={option}
+                checked={selected === option}
+                onChange={() => onSelect(option)}
+              />{" "}
+              {option}
+            </label>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

@@ -1,77 +1,50 @@
 import React, { useState } from "react";
 import { loginUser } from "../services/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
-const Login = () => {
+function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const [error, setError] = useState("");
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
-
     try {
-      const response = await loginUser(formData);
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("username", response.data.username);
-      localStorage.setItem("userId", response.data.id);
-      navigate("/quiz"); // Redirect to Quiz page
+      const { data } = await loginUser({ email, password });
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("username", data.username);
+      localStorage.setItem("userId", data.userId);
+      navigate("/quiz");
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Login failed");
+      alert(err.response?.data?.message || "Login failed");
     }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "50px auto" }}>
+    <div>
       <h2>Login</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleLogin}>
         <input
           type="email"
-          name="email"
           placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
-          style={{ width: "100%", margin: "5px 0", padding: "8px" }}
         />
         <input
           type="password"
-          name="password"
           placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
-          style={{ width: "100%", margin: "5px 0", padding: "8px" }}
         />
-        <button
-          type="submit"
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginTop: "10px",
-            backgroundColor: "#4CAF50",
-            color: "white",
-            border: "none",
-          }}
-        >
-          Login
-        </button>
+        <button type="submit">Login</button>
       </form>
-      <p style={{ marginTop: "10px" }}>
-        Don't have an account? <a href="/register">Register</a>
+      <p>
+        Don't have an account? <Link to="/register">Register</Link>
       </p>
     </div>
   );
-};
+}
 
 export default Login;

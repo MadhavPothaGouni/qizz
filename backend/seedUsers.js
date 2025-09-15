@@ -1,28 +1,17 @@
-// backend/seedUsers.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-require("dotenv").config();
 const User = require("./src/models/User");
+require("dotenv").config();
 
-const seedUser = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error(err));
 
-    const hashedPassword = await bcrypt.hash("123456", 10);
-
-    const user = new User({
-      username: "TestUser",
-      email: "testuser@example.com",
-      password: hashedPassword,
-    });
-
-    await user.save();
-    console.log("Test user created successfully!");
-    process.exit();
-  } catch (err) {
-    console.error(err);
-    process.exit(1);
-  }
+const seed = async () => {
+  await User.deleteMany({});
+  const hashed = await bcrypt.hash("Test@1234", 10);
+  await new User({ username: "TestUser", email: "testuser@example.com", password: hashed }).save();
+  console.log("Seed user created");
+  mongoose.disconnect();
 };
-
-seedUser();
+seed();

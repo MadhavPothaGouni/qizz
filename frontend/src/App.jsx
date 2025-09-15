@@ -6,7 +6,7 @@ import Quiz from "./pages/Quiz";
 import Result from "./pages/Result";
 import Certificate from "./pages/Certificate";
 
-const App = () => {
+function App() {
   return (
     <Router>
       <Routes>
@@ -18,6 +18,6 @@ const App = () => {
       </Routes>
     </Router>
   );
-};
+}
 
 export default App;

@@ -1,21 +1,28 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
-const Result = () => {
+function Result() {
+  const location = useLocation();
+  const { questions, answers } = location.state || {};
   const navigate = useNavigate();
-  const result = JSON.parse(localStorage.getItem("lastResult"));
 
-  if (!result) return <p>No result found.</p>;
+  if (!questions) return <p>No result to show.</p>;
+
+  const score = questions.reduce(
+    (acc, q) => acc + (answers[q._id] === q.correctAnswer ? 1 : 0),
+    0
+  );
 
   return (
     <div>
       <h2>Result</h2>
-      <p>Score: {result.score}</p>
-      <p>Status: {result.passed ? "Pass ✅" : "Fail ❌"}</p>
-      <button onClick={() => navigate("/certificate")}>Download Certificate</button>
-      <button onClick={() => navigate("/quiz")}>Retake Quiz</button>
+      <p>Score: {score}/{questions.length}</p>
+      <p>Status: {score >= questions.length / 2 ? "Pass" : "Fail"}</p>
+      <button onClick={() => navigate("/certificate", { state: { score } })}>
+        Download Certificate
+      </button>
     </div>
   );
-};
+}
 
 export default Result;

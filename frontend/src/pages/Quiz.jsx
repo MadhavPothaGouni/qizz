@@ -1,72 +1,54 @@
 import React, { useEffect, useState } from "react";
-import { fetchQuiz, submitQuiz } from "../services/api";
-import QuestionCard from "../components/QuestionCard";
+import { getQuizQuestions } from "../services/api";
 import { useNavigate } from "react-router-dom";
 
-const Quiz = () => {
+function Quiz() {
   const [questions, setQuestions] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const getQuestions = async () => {
+    const fetchQuiz = async () => {
       try {
-        const res = await fetchQuiz();
-        setQuestions(res.data);
+        const { data } = await getQuizQuestions("defaultQuiz");
+        setQuestions(data);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to fetch quiz:", err);
+        setError(err.response?.data?.message || "Failed to load quiz. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
-    getQuestions();
+    fetchQuiz();
   }, []);
 
-  const handleAnswer = (questionId, answer) => {
-    setAnswers({ ...answers, [questionId]: answer });
-  };
-
-  const handleNext = () => {
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+  const handleAnswer = (answer) => {
+    setAnswers({ ...answers, [questions[current]._id]: answer });
+    if (current + 1 < questions.length) {
+      setCurrent(current + 1);
+    } else {
+      navigate("/result", { state: { questions, answers } });
     }
   };
 
-  const handlePrev = () => {
-    if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
-  };
+  if (loading) return <p>Loading quiz...</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (!questions.length) return <p>No questions available.</p>;
 
-  const handleSubmit = async () => {
-    try {
-      const res = await submitQuiz({ answers });
-      localStorage.setItem("lastResult", JSON.stringify(res.data));
-      navigate("/result");
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  if (!questions.length) return <p>Loading quiz...</p>;
-
+  const q = questions[current];
   return (
     <div>
-      <h2>Quiz</h2>
-      <QuestionCard
-        question={questions[currentIndex]}
-        selectedAnswer={answers[questions[currentIndex]._id]}
-        onSelect={handleAnswer}
-      />
-      <div style={{ marginTop: "10px" }}>
-        <button onClick={handlePrev} disabled={currentIndex === 0}>
-          Previous
+      <h3>{q.questionText}</h3>
+      {q.options.map((opt) => (
+        <button key={opt} onClick={() => handleAnswer(opt)}>
+          {opt}
         </button>
-        {currentIndex < questions.length - 1 ? (
-          <button onClick={handleNext}>Next</button>
-        ) : (
-          <button onClick={handleSubmit}>Submit Quiz</button>
-        )}
-      </div>
+      ))}
     </div>
   );
-};
+}
 
 export default Quiz;

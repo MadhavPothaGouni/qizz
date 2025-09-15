@@ -1,30 +1,26 @@
 const express = require("express");
 const router = express.Router();
-const generatePDF = require("../utils/pdfGenerator");
-const User = require("../models/User");
+const PDFDocument = require("pdfkit");
 const Result = require("../models/Result");
-const Quiz = require("../models/Question"); // assuming quiz info stored here
 
-router.get("/:userId", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId);
-    const result = await Result.findOne({ userId: req.params.userId }).sort({ date: -1 });
-    const quiz = await Quiz.findOne({ _id: result.quizId });
+    const { username, quizTitle, score } = req.body;
 
-    if (!user || !result || !quiz) return res.status(404).json({ message: "Data not found" });
+    const doc = new PDFDocument();
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename=${username}-certificate.pdf`);
+    doc.pipe(res);
 
-    const pdfData = await generatePDF(user, quiz, result.score);
-
-    res.set({
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename=Certificate_${user.username}.pdf`,
-      "Content-Length": pdfData.length,
-    });
-
-    res.send(pdfData);
+    doc.fontSize(30).text("Certificate of Completion", { align: "center" });
+    doc.moveDown();
+    doc.fontSize(20).text(`Awarded to: ${username}`, { align: "center" });
+    doc.moveDown();
+    doc.fontSize(16).text(`Quiz: ${quizTitle}`, { align: "center" });
+    doc.fontSize(16).text(`Score: ${score}`, { align: "center" });
+    doc.end();
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Failed to generate certificate" });
+    res.status(500).json({ message: "Error generating certificate" });
   }
 });
 
